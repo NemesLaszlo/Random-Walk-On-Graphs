@@ -67,8 +67,8 @@ public class GraphPrinter extends JApplet {
         ArrayList<CustomVertex> visitedNodes = new ArrayList();
 
         for(CustomVertex vertex: g.vertexSet()) {
-            System.out.println(vertex.getId() + ":");
-            System.out.println("Visited" + " : " + vertex.getVisited());
+            // System.out.println(vertex.getId() + ":");
+            // System.out.println("Visited" + " : " + vertex.getVisited());
             if(vertex.getVisited()) visitedNodes.add(vertex);
         }
 

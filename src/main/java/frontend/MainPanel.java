@@ -18,7 +18,10 @@ public class MainPanel {
     private String graphType;
     private int startNodeNum = 7;
     private boolean showEdges = true;
+    private boolean autoTurnedOn = false;
     private final String[] graphTypes = {"Clique", "Cycle"};
+    private ActionListener timerAL;
+    private Timer timer;
 
     public MainPanel() {
         frame = new JFrame();
@@ -66,18 +69,37 @@ public class MainPanel {
         next.setBounds(50,100,95,30);
         next.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                // Valami
-
+                walkSimulator.simpleRandomWalkNext();
                 rePaintGraph();
             }
         });
+
+        timerAL = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                walkSimulator.simpleRandomWalkNext();
+                rePaintGraph();
+                // slow opportunity
+                boolean endCheck= walkSimulator.checkAllVisited();
+                if(endCheck) {
+                    timer.stop();
+                    timer = null;
+                    autoTurnedOn = false;
+                    System.out.println("OVER!");
+                }
+            }
+        };
 
         // Auto button
         JButton auto = new JButton("Auto");
         auto.setBounds(50,100,95,30);
         auto.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                // Valami
+                if(!autoTurnedOn) {
+                    timer = new Timer(1000,timerAL);
+                    timer.setRepeats(true);
+                    timer.start();
+                    autoTurnedOn = true;
+                }
             }
         });
 
@@ -86,7 +108,11 @@ public class MainPanel {
         stop.setBounds(50,100,95,30);
         stop.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                // Valami
+                if(autoTurnedOn){
+                    timer.stop();
+                    timer = null;
+                    autoTurnedOn = false;
+                }
             }
         });
 

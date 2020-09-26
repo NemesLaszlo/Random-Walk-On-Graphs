@@ -1,11 +1,10 @@
 package backend;
 
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 enum Topology {
     CLIQUE,
@@ -81,6 +80,19 @@ public class WalkSimulator {
     }
 
     /**
+     * Reset every node back to unvisited.
+     * @return With a logical value -> true if every visited otherwise false.
+     */
+    public boolean checkAllVisited() {
+        for (CustomVertex vertex : this.graph.vertexSet()) {
+            if(!vertex.getVisited()){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Create a Cycle Graph structure, with the Node number of the parameter,
      * and set it up to the simulation.
      * @param numberOfNodes - number of the nodes to create a graph structure.
@@ -102,5 +114,23 @@ public class WalkSimulator {
         this.setup(numberOfNodes);
     }
 
-    // Kellenek a szimulációs algoritmusok
+    /**
+     * Simple Random Walk on undirected graphs.
+     */
+    public void simpleRandomWalkNext() {
+        for (CustomVertex vertex: this.graph.vertexSet()) {
+            if(vertex.getVisited()) {
+                int vertexDegree = Graphs.successorListOf(this.graph, vertex).size() / 2;
+                double probability = (double) 1 / vertexDegree;
+                for(CustomVertex neighbor: Graphs.neighborSetOf(this.graph, vertex) ) {
+                    if( new Random().nextDouble() <= probability ) {
+                        neighbor.setVisited(true);
+                        System.out.println("HERE NOW: " + neighbor.getId());
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
 }

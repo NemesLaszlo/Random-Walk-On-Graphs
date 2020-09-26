@@ -2,7 +2,6 @@ package backend;
 
 public class CustomVertex {
     private String id;
-    private boolean startVertex;
     private boolean visited;
 
     public CustomVertex(String id){
