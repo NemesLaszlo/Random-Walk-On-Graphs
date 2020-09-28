@@ -4,11 +4,16 @@ import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
 
 enum Topology {
     CLIQUE,
-    CYCLE
+    CYCLE,
+    DIRECTED_CLIQUE,
+    DIRECTED_CYCLE
 }
 
 public class WalkSimulator {
@@ -19,6 +24,7 @@ public class WalkSimulator {
     private Random rand;
     private int numOfNodes;
     private int numOfEdges;
+    private CustomVertex actualVisited;
     private Map<String, Integer> score_graph = new HashMap<String, Integer>();
 
     /**
@@ -26,7 +32,7 @@ public class WalkSimulator {
      */
     public WalkSimulator() {
         this.generator = new GraphGenerator();
-        this.graph = this.generator.createCliqueGraph(7);
+        this.graph = this.generator.createCliqueGraph(7, false);
         this.topology = Topology.CLIQUE;
         this.numOfNodes = graph.vertexSet().size();
         this.numOfEdges = graph.edgeSet().size();
@@ -51,6 +57,7 @@ public class WalkSimulator {
             for (CustomVertex vertex : this.graph.vertexSet()) {
                 if (--num < 0) {
                     vertex.setVisited(true);
+                    actualVisited = vertex;
                     return;
                 }
             }
@@ -96,10 +103,15 @@ public class WalkSimulator {
      * Create a Cycle Graph structure, with the Node number of the parameter,
      * and set it up to the simulation.
      * @param numberOfNodes - number of the nodes to create a graph structure.
+     * @param directed - logical value if it is true the graph going to directed.
      */
-    public void createCycleGraph(int numberOfNodes) {
-        this.graph = this.generator.createCycleGraph(numberOfNodes);
-        this.topology = Topology.CYCLE;
+    public void createCycleGraph(int numberOfNodes, boolean directed) {
+        this.graph = this.generator.createCycleGraph(numberOfNodes, directed);
+        if(directed){
+            this.topology = Topology.DIRECTED_CYCLE;
+        }else{
+            this.topology = Topology.CYCLE;
+        }
         this.setup(numberOfNodes);
     }
 
@@ -108,29 +120,48 @@ public class WalkSimulator {
      * and set it up to the simulation.
      * @param numberOfNodes - number of the nodes to create a graph structure.
      */
-    public void createCliqueGraph(int numberOfNodes) {
-        this.graph = this.generator.createCliqueGraph(numberOfNodes);
-        this.topology = Topology.CLIQUE;
+    public void createCliqueGraph(int numberOfNodes, boolean directed) {
+        this.graph = this.generator.createCliqueGraph(numberOfNodes, directed);
+        if(directed){
+            this.topology = Topology.DIRECTED_CLIQUE;
+        }else{
+            this.topology = Topology.CLIQUE;
+        }
         this.setup(numberOfNodes);
     }
 
     /**
-     * Simple Random Walk on undirected graphs.
+     * Simple Random Walk on undirected or directed graphs.
+     * @param directed - Walk on a directed or not directed graph.
      */
-    public void simpleRandomWalkNext() {
-        for (CustomVertex vertex: this.graph.vertexSet()) {
-            if(vertex.getVisited()) {
-                int vertexDegree = Graphs.successorListOf(this.graph, vertex).size() / 2;
-                double probability = (double) 1 / vertexDegree;
-                for(CustomVertex neighbor: Graphs.neighborSetOf(this.graph, vertex) ) {
-                    if( new Random().nextDouble() <= probability ) {
-                        neighbor.setVisited(true);
-                        System.out.println("HERE NOW: " + neighbor.getId());
-                        return;
-                    }
-                }
+
+    public void simpleRandomWalkNext(boolean directed) {
+        int vertexDegree;
+        double probability;
+        if(!directed) {
+            vertexDegree = Graphs.successorListOf(this.graph, actualVisited).size() / 2;
+        }else{
+            vertexDegree = this.graph.outDegreeOf(actualVisited);
+        }
+        probability = (double) 1 / vertexDegree;
+        if(vertexDegree == 0) {
+            return;
+        }
+        for(CustomVertex neighbor: Graphs.successorListOf(this.graph, actualVisited) ) {
+            if(new Random().nextDouble() <= probability ) {
+                neighbor.setVisited(true);
+                System.out.println("HERE NOW: " + neighbor.getId());
+                actualVisited = neighbor;
+                return;
             }
         }
+    }
+
+    /**
+     * Lazy Random Walk on dynamic graphs.
+     */
+    public void lazyRandomWalkNext() {
+
     }
 
 }

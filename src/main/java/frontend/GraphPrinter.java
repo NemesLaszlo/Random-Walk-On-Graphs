@@ -37,11 +37,15 @@ public class GraphPrinter extends JApplet {
      */
     public void SimulationInit(WalkSimulator simulator, String grapthType, int numberOfNodes)
     {
-        simulator.createCycleGraph(numberOfNodes);
+        simulator.createCycleGraph(numberOfNodes, false);
         if ("Clique".equals(grapthType)) {
-            simulator.createCliqueGraph(numberOfNodes);
+            simulator.createCliqueGraph(numberOfNodes, false);
         } else if("Cycle".equals(grapthType)){
-            simulator.createCycleGraph(numberOfNodes);
+            simulator.createCycleGraph(numberOfNodes, false);
+        } else if("Directed Clique".equals(grapthType)) {
+            simulator.createCliqueGraph(numberOfNodes, true);
+        } else if("Directed Cycle".equals(grapthType)) {
+            simulator.createCycleGraph(numberOfNodes, true);
         } else {
             throw new IllegalStateException("Unexpected value: " + grapthType);
         }

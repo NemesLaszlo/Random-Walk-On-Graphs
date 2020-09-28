@@ -2,28 +2,32 @@ package backend;
 
 import org.jgrapht.Graph;
 import org.jgrapht.ListenableGraph;
-import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.DefaultListenableGraph;
-import org.jgrapht.graph.Multigraph;
+import org.jgrapht.graph.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class GraphGenerator {
 
-    // Önhurkok még nincsenek, csak irányítatlan gráfok, majd kell minden csúcsnak annyi önhurok ahány éle van.
-    // Irányított gráf generálás is hiányzik.
-    // Dinamikus gráf generálás is hoiányzik.
+    // Dinamikus + Hurkok
+    // Ahogy olvastam a directed-nél nem kellenek a hurkok elhagyhatóak, de majd csekkoljuk :D
 
     /**
      * Initialize an empty Multigraph.
+     * @param directed - Directed empty graph or not.
      * @return ListenableGraph<CustomVertex, DefaultEdge>
      */
-    private Graph<CustomVertex, DefaultEdge> crateEmptyGraph(){
-        ListenableGraph<CustomVertex, DefaultEdge> graph;
-        graph = new DefaultListenableGraph<CustomVertex, DefaultEdge>(new Multigraph<CustomVertex, DefaultEdge>(DefaultEdge.class));
-
-        return graph;
+    private Graph<CustomVertex, DefaultEdge> crateEmptyGraph(boolean directed){
+        if(directed){
+            Graph<CustomVertex, DefaultEdge> graph;
+            graph = new SimpleDirectedGraph<CustomVertex, DefaultEdge>(DefaultEdge.class);
+            return graph;
+        }else {
+            ListenableGraph<CustomVertex, DefaultEdge> graph;
+            graph = new DefaultListenableGraph<CustomVertex, DefaultEdge>(new Multigraph<CustomVertex, DefaultEdge>(DefaultEdge.class));
+            return graph;
+        }
     }
 
     /**
@@ -45,10 +49,11 @@ public class GraphGenerator {
     /**
      * Create a Cycle Graph structure, with the Node number of the parameter.
      * @param numberOfNodes - number of the nodes to create a graph structure.
-     * @return Graph - (Undirected CycleGraph structure)
+     * @param directed - logical value if it is true the graph going to directed.
+     * @return Graph - (Undirected or Undirected CycleGraph structure)
      */
-    public Graph<CustomVertex, DefaultEdge> createCycleGraph(int numberOfNodes){
-        Graph<CustomVertex, DefaultEdge> cycleGraph = crateEmptyGraph();
+    public Graph<CustomVertex, DefaultEdge> createCycleGraph(int numberOfNodes, boolean directed){
+        Graph<CustomVertex, DefaultEdge> cycleGraph = crateEmptyGraph(directed);
         List<CustomVertex> cycleNodes = createGraphNodes(numberOfNodes);
 
         for(CustomVertex node : cycleNodes){
@@ -56,10 +61,14 @@ public class GraphGenerator {
         }
         for(int i = 0; i < cycleNodes.size() - 1; ++i){
             cycleGraph.addEdge(cycleNodes.get(i), cycleNodes.get(i + 1));
-            cycleGraph.addEdge(cycleNodes.get(i + 1), cycleNodes.get(i));
+            if(!directed) {
+                cycleGraph.addEdge(cycleNodes.get(i + 1), cycleNodes.get(i));
+            }
         }
         cycleGraph.addEdge(cycleNodes.get(cycleNodes.size() - 1), cycleNodes.get(0));
-        cycleGraph.addEdge(cycleNodes.get(0), cycleNodes.get(cycleNodes.size() - 1));
+        if(!directed) {
+            cycleGraph.addEdge(cycleNodes.get(0), cycleNodes.get(cycleNodes.size() - 1));
+        }
 
         return cycleGraph;
     }
@@ -67,10 +76,11 @@ public class GraphGenerator {
     /**
      * Create a Clique Graph structure, with the Node number of the parameter.
      * @param numberOfNodes - number of the nodes to create a graph structure.
-     * @return Graph - (Undirected CliqueGraph structure)
+     * @param directed - logical value if it is true the graph going to directed.
+     * @return Graph - (Undirected or Undirected CliqueGraph structure)
      */
-    public Graph<CustomVertex, DefaultEdge> createCliqueGraph(int numberOfNodes){
-        Graph<CustomVertex, DefaultEdge> cliqueGraph = crateEmptyGraph();
+    public Graph<CustomVertex, DefaultEdge> createCliqueGraph(int numberOfNodes, boolean directed){
+        Graph<CustomVertex, DefaultEdge> cliqueGraph = crateEmptyGraph(directed);
         List<CustomVertex> cliqueNodes = createGraphNodes(numberOfNodes);
 
         for(CustomVertex node : cliqueNodes){
@@ -80,7 +90,13 @@ public class GraphGenerator {
             CustomVertex buffer = cliqueNodes.get(i);
             for (CustomVertex node : cliqueNodes) {
                 if (!buffer.getId().equals(node.getId())) {
-                    cliqueGraph.addEdge(buffer, node);
+                    if(directed && cliqueGraph.incomingEdgesOf(node).size() != 0){
+                        if( new Random().nextDouble() <= 0.5 ) {
+                            cliqueGraph.addEdge(buffer, node);
+                        }
+                    }else{
+                        cliqueGraph.addEdge(buffer, node);
+                    }
                 }
             }
         }
