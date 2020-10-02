@@ -157,9 +157,16 @@ public class GraphGenerator {
             }
         }else if(!firstVertex.getId().equals(secVertex.getId())) {
             if(Graphs.successorListOf(dynamicGraph, firstVertex).contains(secVertex)) {
-                dynamicGraph.removeEdge(pickRandomEdge(dynamicGraph));
+                dynamicGraph.removeEdge(firstVertex, secVertex);
                 System.out.println("Delete Edge Change");
             }
+        }
+        // self loops fix after the changes
+        updateSelfLoopsAfterChange(dynamicGraph);
+
+        for(CustomVertex vertex: dynamicGraph.vertexSet()) {
+            System.out.println("Vertex id: " + vertex.getId() + " Degree num: " +  dynamicGraph.outDegreeOf(vertex));
+            System.out.println("Vertex id: " + vertex.getId() + " Edges to: " +  Graphs.successorListOf(dynamicGraph, vertex));
         }
     }
 
@@ -167,8 +174,7 @@ public class GraphGenerator {
      * After the dynamic changes we update the self loops on vertices. (after add or delete edge)
      * @param dynamicGraph - actual dynamic graph, where we have to update the self loops
      */
-    public void updateSelfLoopsAfterChange(Graph<CustomVertex, DefaultEdge> dynamicGraph) {
-        // ez a metódus nem teljesen jó ahogy látom a futás közben, valszeg a removealledges rész a hiba
+    private void updateSelfLoopsAfterChange(Graph<CustomVertex, DefaultEdge> dynamicGraph) {
         for(CustomVertex vertex : dynamicGraph.vertexSet()) {
             dynamicGraph.removeAllEdges(vertex, vertex); // remove all self loops
             int vertexDegree = dynamicGraph.outDegreeOf(vertex); // get the actual degree to recreate the self loops
@@ -176,22 +182,6 @@ public class GraphGenerator {
                 dynamicGraph.addEdge(vertex, vertex);
             }
         }
-    }
-
-    /**
-     * Pick a random edge from the parameter graph.
-     * @param graph - graph, where we pick a random edge
-     */
-    private DefaultEdge pickRandomEdge(Graph<CustomVertex, DefaultEdge> graph) {
-        DefaultEdge result = null;
-        int num = (int) (Math.random() * graph.edgeSet().size());
-        for (DefaultEdge edge : graph.edgeSet()) {
-            if (--num < 0) {
-                result = edge;
-            }
-        }
-
-        return result;
     }
 
     /**

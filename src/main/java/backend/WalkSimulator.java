@@ -173,19 +173,11 @@ public class WalkSimulator {
 
     /**
      * Dynamic change call. (delete random edge, add random edge or nothing)
+     * With the self loops fix in every step.
      */
     public void dynamicChangeNext() {
         if(this.topology == Topology.DYNAMIC) {
             generator.dynamicChange(this.graph);
-        }
-    }
-
-    /**
-     * After dynamic changes, update the self loops of the vertices.
-     */
-    public void dynamicChangeSelfLoopsUpdate() {
-        if(this.topology == Topology.DYNAMIC) {
-            generator.updateSelfLoopsAfterChange(this.graph);
         }
     }
 
@@ -217,7 +209,6 @@ public class WalkSimulator {
      */
     public void lazyRandomWalkNext() {
         this.dynamicChangeNext();
-        // this.dynamicChangeSelfLoopsUpdate();
     }
 
 }
