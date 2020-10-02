@@ -124,6 +124,15 @@ public class GraphGenerator {
                 }
             }
         }
+        for(CustomVertex vertex : dynamicGraph.vertexSet()) {
+            List<CustomVertex> connectionsTo = Graphs.successorListOf(dynamicGraph, vertex);
+            for(CustomVertex connection : connectionsTo) {
+                if(!Graphs.successorListOf(dynamicGraph, connection).contains(vertex)) {
+                    dynamicGraph.addEdge(connection, vertex);
+                }
+            }
+        }
+
         // Self loops by the out degree num
         for(CustomVertex vertex : dynamicGraph.vertexSet()) {
             int vertexDegree = dynamicGraph.outDegreeOf(vertex);
@@ -147,10 +156,11 @@ public class GraphGenerator {
         if(new Random().nextDouble() <= 0.75) {
             if(firstVertex != null && secVertex != null) {
                 if(!firstVertex.getId().equals(secVertex.getId())) {
-                    if(Graphs.successorListOf(dynamicGraph, firstVertex).contains(secVertex)) {
+                    if(Graphs.successorListOf(dynamicGraph, firstVertex).contains(secVertex) && Graphs.successorListOf(dynamicGraph, secVertex).contains(firstVertex)) {
                         System.out.println("There is a edge between this two vertices.");
                     } else {
                         dynamicGraph.addEdge(firstVertex, secVertex);
+                        dynamicGraph.addEdge(secVertex, firstVertex);
                         System.out.println("Add Edge Change");
                     }
                 }
@@ -158,6 +168,7 @@ public class GraphGenerator {
         }else if(!firstVertex.getId().equals(secVertex.getId())) {
             if(Graphs.successorListOf(dynamicGraph, firstVertex).contains(secVertex)) {
                 dynamicGraph.removeEdge(firstVertex, secVertex);
+                dynamicGraph.removeEdge(secVertex, firstVertex);
                 System.out.println("Delete Edge Change");
             }
         }

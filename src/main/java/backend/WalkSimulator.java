@@ -206,9 +206,27 @@ public class WalkSimulator {
 
     /**
      * Lazy Random Walk on dynamic graphs.
+     * The probability of staying is 1 - (d(u)/dmax+ 1)).
      */
     public void lazyRandomWalkNext() {
         this.dynamicChangeNext();
+
+        int vertexDegree = this.graph.outDegreeOf(actualVisited);
+        int maxDegree = (this.numOfNodes -1) * 2; // declared max degree num
+        int actualMaxDegree = this.maxDegreeNumOfTheGraph();
+        System.out.println("Const max degree: " + maxDegree);
+        System.out.println("Actual max degree: " + actualMaxDegree);
+        double probability = 1 - ((double)vertexDegree / ((double)maxDegree + 1));
+        System.out.println("Dynamic probability: " + probability);
+        for(CustomVertex neighbor: Graphs.successorListOf(this.graph, actualVisited) ) {
+            if(new Random().nextDouble() >= probability ) {
+                neighbor.setVisited(true);
+                System.out.println("HERE NOW: " + neighbor.getId());
+                this.walkCount++;
+                actualVisited = neighbor;
+                return;
+            }
+        }
     }
 
 }

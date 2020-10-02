@@ -69,15 +69,24 @@ public class MainPanel {
         next.setBounds(50,100,95,30);
         next.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                walkSimulator.simpleRandomWalkNext();
-                //walkSimulator.lazyRandomWalkNext();
+                if(!graphType.contains("Dynamic")) {
+                    walkSimulator.simpleRandomWalkNext();
+                }
+                else{
+                    walkSimulator.lazyRandomWalkNext();
+                }
                 rePaintGraph();
             }
         });
 
         timerAL = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                walkSimulator.simpleRandomWalkNext();
+                if(!graphType.contains("Dynamic")) {
+                    walkSimulator.simpleRandomWalkNext();
+                }
+                else{
+                    walkSimulator.lazyRandomWalkNext();
+                }
                 rePaintGraph();
                 // slow opportunity
                 boolean endCheck= walkSimulator.checkAllVisited();
