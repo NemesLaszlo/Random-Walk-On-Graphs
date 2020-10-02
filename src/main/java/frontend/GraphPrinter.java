@@ -46,7 +46,9 @@ public class GraphPrinter extends JApplet {
             simulator.createCliqueGraph(numberOfNodes, true);
         } else if("Directed Cycle".equals(grapthType)) {
             simulator.createCycleGraph(numberOfNodes, true);
-        } else {
+        } else if("Dynamic".equals(grapthType)) {
+            simulator.createDynamicGraph(numberOfNodes);
+        }else {
             throw new IllegalStateException("Unexpected value: " + grapthType);
         }
 

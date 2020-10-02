@@ -1,7 +1,7 @@
 package backend;
 
 import org.jgrapht.Graph;
-import org.jgrapht.ListenableGraph;
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.*;
 
 import java.util.ArrayList;
@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Random;
 
 public class GraphGenerator {
-
-    // Dinamikus + Hurkok
-    // Ahogy olvastam a directed-nél nem kellenek a hurkok elhagyhatóak, de majd csekkoljuk :D
 
     /**
      * Initialize an empty Multigraph.
@@ -24,8 +21,8 @@ public class GraphGenerator {
             graph = new SimpleDirectedGraph<CustomVertex, DefaultEdge>(DefaultEdge.class);
             return graph;
         }else {
-            ListenableGraph<CustomVertex, DefaultEdge> graph;
-            graph = new DefaultListenableGraph<CustomVertex, DefaultEdge>(new Multigraph<CustomVertex, DefaultEdge>(DefaultEdge.class));
+            Graph<CustomVertex, DefaultEdge> graph;
+            graph = new SimpleGraph<CustomVertex, DefaultEdge>(DefaultEdge.class);
             return graph;
         }
     }
@@ -102,6 +99,117 @@ public class GraphGenerator {
         }
 
         return cliqueGraph;
+    }
+
+    /**
+     * Create a Dynamic Graph structure, with the Node number of the parameter.
+     * @param numberOfNodes - number of the nodes to create a graph structure.
+     * @return Graph - Dynamic "CliqueGraph" structure, only the frame without dynamic change.
+     */
+    public Graph<CustomVertex, DefaultEdge> createDynamicGraph(int numberOfNodes){
+        Graph<CustomVertex, DefaultEdge> dynamicGraph;
+        dynamicGraph = new DirectedPseudograph<CustomVertex, DefaultEdge>(DefaultEdge.class);
+        List<CustomVertex> dynamicNodes = createGraphNodes(numberOfNodes);
+
+        for(CustomVertex node : dynamicNodes){
+            dynamicGraph.addVertex(node);
+        }
+        for(int i = 0; i < dynamicNodes.size(); ++i){
+            CustomVertex buffer = dynamicNodes.get(i);
+            for (CustomVertex node : dynamicNodes) {
+                if (!buffer.getId().equals(node.getId())) {
+                    if( new Random().nextDouble() <= 0.5 ) {
+                        dynamicGraph.addEdge(buffer, node);
+                    }
+                }
+            }
+        }
+        // Self loops by the out degree num
+        for(CustomVertex vertex : dynamicGraph.vertexSet()) {
+            int vertexDegree = dynamicGraph.outDegreeOf(vertex);
+            for(int i = 0; i < vertexDegree; ++i) {
+                dynamicGraph.addEdge(vertex, vertex);
+            }
+        }
+
+        return dynamicGraph;
+    }
+
+    /**
+     * Dynamic Graph - dynamic function add random edge to the graph or delete random edge or do nothing in the step.
+     * Note: after the changes we have to cover the degree nums because of the self loops and pick the max to the random lazy walk.
+     * @param dynamicGraph - actual dynamic graph, where we make changes with the edges.
+     */
+    public void dynamicChange(Graph<CustomVertex, DefaultEdge> dynamicGraph) {
+        CustomVertex firstVertex = pickRandomVertex(dynamicGraph);
+        CustomVertex secVertex = pickRandomVertex(dynamicGraph);
+        System.out.println("first id: " + firstVertex.getId() + " sec id: " + secVertex.getId() );
+        if(new Random().nextDouble() <= 0.75) {
+            if(firstVertex != null && secVertex != null) {
+                if(!firstVertex.getId().equals(secVertex.getId())) {
+                    if(Graphs.successorListOf(dynamicGraph, firstVertex).contains(secVertex)) {
+                        System.out.println("There is a edge between this two vertices.");
+                    } else {
+                        dynamicGraph.addEdge(firstVertex, secVertex);
+                        System.out.println("Add Edge Change");
+                    }
+                }
+            }
+        }else if(!firstVertex.getId().equals(secVertex.getId())) {
+            if(Graphs.successorListOf(dynamicGraph, firstVertex).contains(secVertex)) {
+                dynamicGraph.removeEdge(pickRandomEdge(dynamicGraph));
+                System.out.println("Delete Edge Change");
+            }
+        }
+    }
+
+    /**
+     * After the dynamic changes we update the self loops on vertices. (after add or delete edge)
+     * @param dynamicGraph - actual dynamic graph, where we have to update the self loops
+     */
+    public void updateSelfLoopsAfterChange(Graph<CustomVertex, DefaultEdge> dynamicGraph) {
+        // ez a metódus nem teljesen jó ahogy látom a futás közben, valszeg a removealledges rész a hiba
+        for(CustomVertex vertex : dynamicGraph.vertexSet()) {
+            dynamicGraph.removeAllEdges(vertex, vertex); // remove all self loops
+            int vertexDegree = dynamicGraph.outDegreeOf(vertex); // get the actual degree to recreate the self loops
+            for(int i = 0; i < vertexDegree; ++i) {
+                dynamicGraph.addEdge(vertex, vertex);
+            }
+        }
+    }
+
+    /**
+     * Pick a random edge from the parameter graph.
+     * @param graph - graph, where we pick a random edge
+     */
+    private DefaultEdge pickRandomEdge(Graph<CustomVertex, DefaultEdge> graph) {
+        DefaultEdge result = null;
+        int num = (int) (Math.random() * graph.edgeSet().size());
+        for (DefaultEdge edge : graph.edgeSet()) {
+            if (--num < 0) {
+                result = edge;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Pick a random vertex from the parameter graph.
+     * @param graph - graph, where we pick a random vertex
+     */
+    private CustomVertex pickRandomVertex(Graph<CustomVertex, DefaultEdge> graph) {
+        CustomVertex result = null;
+        int size = graph.vertexSet().size();
+        int item = new Random().nextInt(size);
+        int i = 0;
+        for(CustomVertex vertex : graph.vertexSet())
+        {
+            if (i == item)
+                result = vertex;
+            i++;
+        }
+        return result;
     }
 
     /**

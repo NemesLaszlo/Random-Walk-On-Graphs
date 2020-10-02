@@ -19,7 +19,7 @@ public class MainPanel {
     private int startNodeNum = 7;
     private boolean showEdges = true;
     private boolean autoTurnedOn = false;
-    private final String[] graphTypes = {"Clique", "Cycle", "Directed Clique", "Directed Cycle"};
+    private final String[] graphTypes = {"Clique", "Cycle", "Directed Clique", "Directed Cycle", "Dynamic"};
     private ActionListener timerAL;
     private Timer timer;
 
@@ -69,14 +69,15 @@ public class MainPanel {
         next.setBounds(50,100,95,30);
         next.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                walkSimulator.simpleRandomWalkNext(graphType.contains("Directed"));
+                walkSimulator.simpleRandomWalkNext();
+                //walkSimulator.lazyRandomWalkNext();
                 rePaintGraph();
             }
         });
 
         timerAL = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                walkSimulator.simpleRandomWalkNext(graphType.contains("Directed"));
+                walkSimulator.simpleRandomWalkNext();
                 rePaintGraph();
                 // slow opportunity
                 boolean endCheck= walkSimulator.checkAllVisited();
@@ -85,6 +86,8 @@ public class MainPanel {
                     timer = null;
                     autoTurnedOn = false;
                     System.out.println("OVER!");
+                    System.out.println("Step Count: " + walkSimulator.getWalkCount());
+                    walkSimulator.resetWalkCount();
                 }
             }
         };

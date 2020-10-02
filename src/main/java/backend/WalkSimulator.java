@@ -4,16 +4,15 @@ import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 
 enum Topology {
     CLIQUE,
     CYCLE,
     DIRECTED_CLIQUE,
-    DIRECTED_CYCLE
+    DIRECTED_CYCLE,
+    DYNAMIC
 }
 
 public class WalkSimulator {
@@ -24,6 +23,7 @@ public class WalkSimulator {
     private Random rand;
     private int numOfNodes;
     private int numOfEdges;
+    private int walkCount;
     private CustomVertex actualVisited;
     private Map<String, Integer> score_graph = new HashMap<String, Integer>();
 
@@ -36,6 +36,7 @@ public class WalkSimulator {
         this.topology = Topology.CLIQUE;
         this.numOfNodes = graph.vertexSet().size();
         this.numOfEdges = graph.edgeSet().size();
+        this.walkCount = 0;
         this.rand = new Random();
         this.randomizeGraph();
     }
@@ -46,6 +47,21 @@ public class WalkSimulator {
      */
     public Graph<CustomVertex, DefaultEdge> getGraph() {
         return this.graph;
+    }
+
+    /**
+     * Getter to number of steps under the walk.
+     * @return With the number of steps to cover the whole graph.
+     */
+    public int getWalkCount() {
+        return this.walkCount;
+    }
+
+    /**
+     * Reset the number of steps under the walk.
+     */
+    public void resetWalkCount() {
+        this.walkCount = 0;
     }
 
     /**
@@ -100,6 +116,20 @@ public class WalkSimulator {
     }
 
     /**
+     * Get the maximum number from the vertex degree.
+     * We need this value to the lazy random walk probability (in every step?)
+     */
+    private int maxDegreeNumOfTheGraph() {
+        int max = this.graph.outDegreeOf(this.graph.vertexSet().iterator().next());
+        for (CustomVertex vertex : this.graph.vertexSet()) {
+            if (this.graph.outDegreeOf(vertex) > max) {
+                max = this.graph.outDegreeOf(vertex);
+            }
+        }
+        return max;
+    }
+
+    /**
      * Create a Cycle Graph structure, with the Node number of the parameter,
      * and set it up to the simulation.
      * @param numberOfNodes - number of the nodes to create a graph structure.
@@ -131,18 +161,42 @@ public class WalkSimulator {
     }
 
     /**
-     * Simple Random Walk on undirected or directed graphs.
-     * @param directed - Walk on a directed or not directed graph.
+     * Create a Dynamic Graph structure, with the Node number of the parameter,
+     * and set it up to the simulation. (frame without dynamic change)
+     * @param numberOfNodes - number of the nodes to create a graph structure.
      */
+    public void createDynamicGraph(int numberOfNodes) {
+        this.graph = this.generator.createDynamicGraph(numberOfNodes);
+        this.topology = Topology.DYNAMIC;
+        this.setup(numberOfNodes);
+    }
 
-    public void simpleRandomWalkNext(boolean directed) {
+    /**
+     * Dynamic change call. (delete random edge, add random edge or nothing)
+     */
+    public void dynamicChangeNext() {
+        if(this.topology == Topology.DYNAMIC) {
+            generator.dynamicChange(this.graph);
+        }
+    }
+
+    /**
+     * After dynamic changes, update the self loops of the vertices.
+     */
+    public void dynamicChangeSelfLoopsUpdate() {
+        if(this.topology == Topology.DYNAMIC) {
+            generator.updateSelfLoopsAfterChange(this.graph);
+        }
+    }
+
+    /**
+     * Simple Random Walk on undirected or directed graphs.
+     */
+    public void simpleRandomWalkNext() {
         int vertexDegree;
         double probability;
-        if(!directed) {
-            vertexDegree = Graphs.successorListOf(this.graph, actualVisited).size() / 2;
-        }else{
-            vertexDegree = this.graph.outDegreeOf(actualVisited);
-        }
+
+        vertexDegree = this.graph.outDegreeOf(actualVisited);
         probability = (double) 1 / vertexDegree;
         if(vertexDegree == 0) {
             return;
@@ -151,6 +205,7 @@ public class WalkSimulator {
             if(new Random().nextDouble() <= probability ) {
                 neighbor.setVisited(true);
                 System.out.println("HERE NOW: " + neighbor.getId());
+                this.walkCount++;
                 actualVisited = neighbor;
                 return;
             }
@@ -161,7 +216,8 @@ public class WalkSimulator {
      * Lazy Random Walk on dynamic graphs.
      */
     public void lazyRandomWalkNext() {
-
+        this.dynamicChangeNext();
+        // this.dynamicChangeSelfLoopsUpdate();
     }
 
 }
